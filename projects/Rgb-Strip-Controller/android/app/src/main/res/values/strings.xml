@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">RGB Strip</string>
+    <string name="screen_title">RGB Strip</string>
+    <string name="screen_subtitle">Manual control</string>
+    <string name="controller_url">Controller URL</string>
+    <string name="controller_url_placeholder">http://192.168.1.50</string>
+    <string name="invalid_url">Enter a controller base address with no path or query, such as http://192.168.1.50.</string>
+    <string name="power">Power</string>
+    <string name="selected_on">Selected: On</string>
+    <string name="selected_off">Selected: Off</string>
+    <string name="selected_color">Selected color</string>
+    <string name="rgb_values">R %1$d   G %2$d   B %3$d</string>
+    <string name="color">Color</string>
+    <string name="red">Red</string>
+    <string name="green">Green</string>
+    <string name="blue">Blue</string>
+    <string name="rgb_values_local">RGB values are selected locally</string>
+    <string name="apply">Apply</string>
+    <string name="applying">Applying…</string>
+    <string name="rainbow_forward">Rainbow forward</string>
+    <string name="rainbow_reverse">Rainbow reverse</string>
+    <string name="status_idle">Enter the controller base address, then choose an action.</string>
+    <string name="status_succeeded">Request completed.</string>
+    <string name="status_failed">Request failed. Check the controller address and connection, then try again.</string>
+</resources>
+

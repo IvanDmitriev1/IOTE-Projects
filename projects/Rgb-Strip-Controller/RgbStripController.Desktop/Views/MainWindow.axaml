@@ -1,0 +1,110 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RgbStripController.Desktop.ViewModels"
+        x:Class="RgbStripController.Desktop.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="RGB Strip Controller"
+        Background="{DynamicResource SystemControlPageBackgroundChromeLowBrush}"
+        Width="800" Height="760" MinWidth="600" MinHeight="650">
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel MaxWidth="760" HorizontalAlignment="Stretch" Margin="24" Spacing="16"
+                        IsEnabled="{Binding CanInteract}">
+                <Border Padding="16"
+                        Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1" CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <TextBlock Text="Controller" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Text="{Binding BaseAddress, Mode=TwoWay}"
+                                     PlaceholderText="http://192.168.4.1"
+                                     AutomationProperties.Name="Controller base address" />
+                        </Grid>
+                        <TextBlock IsVisible="{Binding HasEndpointError}"
+                                   Text="{Binding EndpointError}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Padding="16"
+                        Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1" CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <StackPanel Spacing="16">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <TextBlock Text="Color" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <ToggleSwitch Grid.Column="1" Content="Power"
+                                          IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                          AutomationProperties.Name="Strip power" />
+                        </Grid>
+
+                        <ColorView MaxWidth="520" Height="260" HorizontalAlignment="Stretch"
+                                   Color="{Binding Color, Mode=TwoWay}"
+                                   ColorSpectrumComponents="SaturationValue" ColorSpectrumShape="Box"
+                                   IsAlphaEnabled="False" IsAlphaVisible="False"
+                                   IsAccentColorsVisible="False" IsColorComponentsVisible="False"
+                                   IsColorModelVisible="False" IsColorPaletteVisible="False"
+                                   IsColorPreviewVisible="False" IsColorSpectrumVisible="True"
+                                   IsColorSpectrumSliderVisible="True" IsComponentSliderVisible="False"
+                                   IsComponentTextInputVisible="False" IsHexInputVisible="False"
+                                   AutomationProperties.Name="Strip color spectrum" />
+
+                        <Expander Header="Advanced" IsExpanded="False" HorizontalAlignment="Stretch">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Red" />
+                                        <NumericUpDown Minimum="0" Maximum="255" Increment="1"
+                                                       Value="{Binding Red, Mode=TwoWay}"
+                                                       AutomationProperties.Name="Red channel" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="Green" />
+                                        <NumericUpDown Minimum="0" Maximum="255" Increment="1"
+                                                       Value="{Binding Green, Mode=TwoWay}"
+                                                       AutomationProperties.Name="Green channel" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="4">
+                                        <TextBlock Text="Blue" />
+                                        <NumericUpDown Minimum="0" Maximum="255" Increment="1"
+                                                       Value="{Binding Blue, Mode=TwoWay}"
+                                                       AutomationProperties.Name="Blue channel" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="{Binding ColorHex}" AutomationProperties.Name="Selected color hex value" />
+                            </StackPanel>
+                        </Expander>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <TextBlock Text="Power changes take effect when applied." TextWrapping="Wrap"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Command="{Binding ApplyCommand}" Content="Apply"
+                                    AutomationProperties.Name="Apply selected color and power" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Padding="16"
+                        Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1" CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <TextBlock Text="Rainbow" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding Directions}"
+                                  SelectedItem="{Binding Direction, Mode=TwoWay}"
+                                  IsEnabled="{Binding IsOn}" HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="Rainbow direction" />
+                        <Button Grid.Column="2" Command="{Binding StartRainbowCommand}" Content="Start Rainbow" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Margin="24,0,24,16" Spacing="6">
+            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding WarningMessage}" TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</Window>
