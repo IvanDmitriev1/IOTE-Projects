@@ -9,6 +9,7 @@
     <string name="selected_on">Selected: On</string>
     <string name="selected_off">Selected: Off</string>
     <string name="selected_color">Selected color</string>
+    <string name="selected_color_description">Selected color %1$s</string>
     <string name="rgb_values">R %1$d   G %2$d   B %3$d</string>
     <string name="color">Color</string>
     <string name="red">Red</string>

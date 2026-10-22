@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -27,19 +27,18 @@ fun ChannelSlider(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 24.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Text(label, style = MaterialTheme.typography.bodyMedium)
             Text(
                 text = value.toString(),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -47,14 +46,11 @@ fun ChannelSlider(
             value = value.toFloat(),
             onValueChange = { onValueChanged(it.roundToInt()) },
             valueRange = 0f..maximum.toFloat(),
-            steps = maximum - 1,
             enabled = enabled,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics {
-                    contentDescription = label
-                    stateDescription = value.toString()
-                },
+            modifier = Modifier.fillMaxWidth().semantics {
+                contentDescription = label
+                stateDescription = value.toString()
+            },
         )
     }
 }
