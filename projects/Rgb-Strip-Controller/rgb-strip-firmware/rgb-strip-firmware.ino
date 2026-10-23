@@ -1,12 +1,14 @@
 #include "HttpHelpers.h"
 #include "LedController.h"
 #include "WiFiController.h"
+#include <SoftwareSerial.h>
 #include <WiFiEsp.h>
 
 char ssid[] = "aiote";
 char password[] = "12345678";
 
 LedController leds;
+SoftwareSerial espSerial(6, 7); // RX, TX
 WiFiController wifi(ssid, password);
 WiFiEspServer server(80);
 Application app;
@@ -41,7 +43,7 @@ void HandleRainbow(Request &req, Response &res)
 
     LedController::Direction direction = LedController::Direction::Forward;
     const char *query = req.query();
-    
+
     if (query && *query)
     {
         if (strcmp(query, "direction=2") == 0)
@@ -105,13 +107,15 @@ void UpdateHttp(bool online)
 void setup()
 {
     Serial.begin(9600);
+    Serial.println(F("RGB strip controller starting. Initializing Wi-Fi..."));
+    espSerial.begin(9600);
     leds.Begin();
     app.get("/rgb", &HandleRgb);
     app.get("/rainbow", &HandleRainbow);
     app.use(&HandleFallback);
     app.header("Transfer-Encoding", transferEncoding, sizeof(transferEncoding));
     app.setTimeout(3000); // aWOT input inactivity timeout, in milliseconds
-    wifi.Begin(Serial);
+    wifi.Begin(espSerial);
 }
 
 void loop()

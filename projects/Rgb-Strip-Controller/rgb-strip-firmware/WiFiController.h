@@ -6,7 +6,7 @@ class WiFiController
 {
   public:
     WiFiController(char *ssid, char *password);
-    void Begin(HardwareSerial &esp);
+    void Begin(Stream &esp);
     bool Update();
 
   private:
