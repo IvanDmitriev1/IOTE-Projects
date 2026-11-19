@@ -1,0 +1,2 @@
+-keep class com.google.firebase.** { *; }
+-keep class com.example.homeinvasion.data.EventRecord { public <init>(); public *; }

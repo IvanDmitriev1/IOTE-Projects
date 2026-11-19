@@ -412,3 +412,6 @@ local.properties
 captures/
 .idea/
 
+projects/Home-Invasion-Detection-System/android/app/google-services.json
+projects/Home-Invasion-Detection-System/raspberry-pi/service-account.json
+projects/Home-Invasion-Detection-System/raspberry-pi/*-firebase-adminsdk-*.json
