@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+Adafruit-Blinka
+adafruit-circuitpython-bme280
+adafruit-circuitpython-bmp280
+adafruit-circuitpython-neopixel-spi
