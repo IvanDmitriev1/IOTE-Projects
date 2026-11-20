@@ -3,4 +3,5 @@ uvicorn
 Adafruit-Blinka
 adafruit-circuitpython-bme280
 adafruit-circuitpython-bmp280
-adafruit-circuitpython-neopixel-spi
+adafruit-circuitpython-neopixel
+Adafruit-Blinka-Raspberry-Pi5-Neopixel

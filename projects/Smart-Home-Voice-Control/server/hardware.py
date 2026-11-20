@@ -1,6 +1,7 @@
 from collections.abc import Callable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
+from time import sleep
 
 from operations import RGB
 
@@ -16,23 +17,28 @@ class Hardware:
 @contextmanager
 def open_hardware() -> Iterator[Hardware]:
     import board
-    import neopixel_spi
+    import neopixel
     from adafruit_bme280.basic import Adafruit_BME280_I2C
     from adafruit_bmp280 import Adafruit_BMP280_I2C
+    from adafruit_raspberry_pi5_neopixel_write import free_pio
 
-    with ExitStack() as resources:
-        spi = board.SPI()
-        resources.callback(spi.deinit)
-        pixels = neopixel_spi.NeoPixel_SPI(
-            spi, 12, brightness=0.1, pixel_order=neopixel_spi.GRB, auto_write=False
+    with ExitStack() as pio, ExitStack() as resources:
+        pixels = neopixel.NeoPixel(
+            board.D18, 12, brightness=0.1, auto_write=False, pixel_order=neopixel.GRB
         )
-        resources.callback(pixels.deinit)
 
         def set_color(color: RGB) -> None:
             pixels.fill(color)
             pixels.show()
 
+        def release_pio() -> None:
+            # Let the PIO finish transmitting before releasing it.
+            sleep(0.001)
+            free_pio()
+
+        resources.callback(pixels.deinit)
         set_color((0, 0, 0))
+        pio.callback(release_pio)
 
         i2c = board.I2C()
         resources.callback(i2c.deinit)

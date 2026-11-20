@@ -12,7 +12,7 @@ Power down the Pi and strip supply before connecting them.
 | Sensor SDA | GPIO2 / I2C1 SDA, physical pin 3 |
 | Sensor SCL | GPIO3 / I2C1 SCL, physical pin 5 |
 | Common ground | GND, physical pin 6 |
-| Strip data through level shifter | GPIO10 / SPI0 MOSI, physical pin 19 |
+| Strip data through level shifter | GPIO18, physical pin 12 |
 
 Set the sensor breakout for I2C at address `0x76` or `0x77`. The server reads the chip ID at startup to select the driver.
 
@@ -20,19 +20,15 @@ Set the sensor breakout for I2C at address `0x76` or `0x77`. The server reads th
 
 ```sh
 sudo apt update
-sudo apt install python3-venv python3-lgpio python3-libgpiod i2c-tools
 sudo raspi-config nonint do_i2c 0
-sudo raspi-config nonint do_spi 0
 ```
-
-The sensor uses I2C and the strip uses SPI on GPIO10. Leave `dtparam=audio` as it is.
 
 ### 2. Create the virtual environment and install dependencies
 
 ```sh
 python3 -m venv --system-site-packages .venv
 . .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install --upgrade -r requirements.txt
 ```
 
 ### 3. Start the server
