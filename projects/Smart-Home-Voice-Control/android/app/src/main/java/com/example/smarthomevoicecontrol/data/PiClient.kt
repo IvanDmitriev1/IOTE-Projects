@@ -25,6 +25,12 @@ class PiClient(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) {
         }
     }
 
+    suspend fun setLights(config: PiConfig, hex: String): Result<Unit> = withContext(ioDispatcher) {
+        require(Regex("[0-9A-Fa-f]{6}").matches(hex)) { "RGB color must be six hexadecimal digits." }
+        val route = "/${hex.uppercase(java.util.Locale.ROOT)}"
+        request(config, route).mapCatching { echoed -> validateLightEcho(route, echoed) }
+    }
+
     internal fun parseReading(kind: ReadingKind, response: String): SensorReading {
         val body = response.trim()
         if (kind == ReadingKind.WEATHER) {

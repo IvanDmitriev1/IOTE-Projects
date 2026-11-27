@@ -43,4 +43,5 @@ enum class LightColor(val route: String, val label: String) {
 sealed interface VoiceCommand {
     data class Read(val kind: ReadingKind) : VoiceCommand
     data class SetLights(val color: LightColor) : VoiceCommand
+    data class SetLightDescription(val description: String) : VoiceCommand
 }

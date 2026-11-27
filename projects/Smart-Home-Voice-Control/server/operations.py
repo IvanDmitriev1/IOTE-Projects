@@ -28,4 +28,11 @@ def forecast(pressure_hpa: float) -> str:
 def light_color(path: str) -> RGB | None:
     if path == "/random":
         return randrange(256), randrange(256), randrange(256)
-    return COLORS.get(path)
+    color = COLORS.get(path)
+    if color is not None:
+        return color
+    if len(path) == 7 and path[0] == "/":
+        hex_digits = path[1:]
+        if all(digit in "0123456789abcdefABCDEF" for digit in hex_digits):
+            return tuple(int(hex_digits[index:index + 2], 16) for index in (0, 2, 4))
+    return None

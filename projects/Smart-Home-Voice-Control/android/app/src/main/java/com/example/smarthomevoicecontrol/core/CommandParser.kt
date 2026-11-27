@@ -1,5 +1,7 @@
 package com.example.smarthomevoicecontrol.core
 
+import java.util.Locale
+
 sealed interface ParseResult {
     data class Valid(val commands: List<VoiceCommand>) : ParseResult
     data class Invalid(val reason: String) : ParseResult
@@ -8,7 +10,7 @@ sealed interface ParseResult {
 object CommandParser {
     private val politePrefix = Regex("^(please\\s+|can you\\s+|could you\\s+|would you\\s+|tell me\\s+|show me\\s+|what is\\s+|so\\s+|also\\s+|separately\\s+|the values of\\s+)+")
     private val splitClause = Regex("\\s*(?:,|\\band\\b)\\s*")
-    private val word = Regex("[a-z]+")
+    private val word = Regex("[a-z0-9]+")
     private val lightColors = mapOf(
         "white" to LightColor.WHITE, "red" to LightColor.RED, "green" to LightColor.GREEN,
         "blue" to LightColor.BLUE, "yellow" to LightColor.YELLOW,
@@ -19,15 +21,17 @@ object CommandParser {
     private val color = "(?:${lightColors.keys.joinToString("|")})"
     private val leadingLightAction = Regex("(?:turn|switch) (?:off $target|on $target(?: (?:colou?r )?($color))?)")
     private val trailingLightAction = Regex("(?:turn|switch|set|change|make) $target (?:to )?(?:off|on(?: (?:colou?r )?($color))?|(?:colou?r )?($color))")
-    private val colorContinuation = Regex("colou?r $color")
+    private val colorContinuation = Regex("colou?r .+")
     private val bareLightOn = Regex("(?:(?:turn|switch) on $target|(?:turn|switch|set|change|make) $target (?:to )?on)")
+    private val describedLight = Regex("(?:turn|switch|set|change|make) $target (?:to )?(?:colou?r )?(.+)")
+    private val explicitColorAction = Regex("(?:set|change|make) (?:the )?colou?r (?:to )?(.+)")
 
-    fun parse(transcript: String): ParseResult {
-        val normalized = transcript.lowercase().replace(Regex("[^a-z,']+"), " ").trim()
+    fun parse(transcript: String, supportsColor: (String) -> Boolean = { it in lightColors && it !in setOf("random", "black") }): ParseResult {
+        val normalized = transcript.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9,']+"), " ").trim()
         if (normalized.isBlank()) return ParseResult.Invalid("I didn't hear a command.")
         val commands = mutableListOf<VoiceCommand>()
         val requestedReadings = mutableSetOf<ReadingKind>()
-        var lights: LightColor? = null
+        var lights: String? = null
 
         val clauses = buildList<String> {
             for (clause in splitClause.split(normalized)) {
@@ -49,12 +53,14 @@ object CommandParser {
             if (words.any { it in setOf("not", "never", "dont", "without") })
                 return ParseResult.Invalid("Negated commands aren't supported.")
             val mentionsLights = words.any { it in setOf("light", "lights", "led", "strip") }
-            if (mentionsLights) {
-                val parsed = parseLights(words) ?: return ParseResult.Invalid("I couldn't identify one supported light action.")
-                if (lights != null && lights != parsed)
+            val mentionsColorAction = explicitColorAction.matches(clause)
+            if (mentionsLights || mentionsColorAction) {
+                val parsed = parseLights(clause, words, supportsColor) ?: return ParseResult.Invalid("I couldn't identify one supported light action.")
+                val key = when (parsed) { is VoiceCommand.SetLights -> "fixed:${parsed.color}"; is VoiceCommand.SetLightDescription -> "description:${parsed.description}"; else -> "" }
+                if (lights != null && lights != key)
                     return ParseResult.Invalid("Choose only one light action per command.")
-                if (lights == null) commands += VoiceCommand.SetLights(parsed)
-                lights = parsed
+                if (lights == null) commands += parsed
+                lights = key
                 continue
             }
             if (words.windowed(2).any { it == listOf("sensor", "data") } || words == listOf("sensors")) {
@@ -80,16 +86,19 @@ object CommandParser {
         if (requested.add(kind)) commands += VoiceCommand.Read(kind)
     }
 
-    private fun parseLights(words: List<String>): LightColor? {
-        val clause = words.joinToString(" ")
-        val match = leadingLightAction.matchEntire(clause) ?: trailingLightAction.matchEntire(clause) ?: return null
-        val selected = match.groupValues.drop(1).firstOrNull { it.isNotEmpty() }
-        if (selected == "black" && "on" in words) return null
-        return when {
-            selected != null -> lightColors.getValue(selected)
-            "off" in words -> LightColor.OFF
-            "on" in words -> LightColor.WHITE
-            else -> null
+    private fun parseLights(clause: String, words: List<String>, supportsColor: (String) -> Boolean): VoiceCommand? {
+        val fixed = (leadingLightAction.matchEntire(clause) ?: trailingLightAction.matchEntire(clause))
+            ?.groupValues?.drop(1)?.firstOrNull { it.isNotEmpty() }
+        if (fixed != null) {
+            if (fixed == "random") return VoiceCommand.SetLights(LightColor.RANDOM)
+            if (fixed == "black") return if ("on" in words) null else VoiceCommand.SetLights(LightColor.OFF)
+            return if (supportsColor(fixed)) VoiceCommand.SetLightDescription(fixed) else null
         }
+        if (clause.matches(Regex("(?:turn|switch) off $target|(?:turn|switch|set|change|make) $target (?:to )?off"))) return VoiceCommand.SetLights(LightColor.OFF)
+        if (clause.matches(Regex("(?:(?:turn|switch) on $target|(?:turn|switch|set|change|make) $target (?:to )?on)"))) return VoiceCommand.SetLights(LightColor.WHITE)
+        val description = (explicitColorAction.matchEntire(clause)?.groupValues?.get(1)
+            ?: describedLight.matchEntire(clause)?.groupValues?.get(1)
+            ?: Regex("(?:turn|switch) on $target (.+)").matchEntire(clause)?.groupValues?.get(1))?.trim() ?: return null
+        return if (supportsColor(description)) VoiceCommand.SetLightDescription(description) else null
     }
 }

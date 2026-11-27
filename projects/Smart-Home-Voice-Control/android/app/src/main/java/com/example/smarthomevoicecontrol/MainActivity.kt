@@ -24,7 +24,7 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val container get() = (application as SmartHomeApplication).container
-    private val voiceViewModel: VoiceControlViewModel by viewModels { Factory { VoiceControlViewModel(container.configStore, container.piClient) } }
+    private val voiceViewModel: VoiceControlViewModel by viewModels { Factory { VoiceControlViewModel(container.configStore, container.piClient, container.textToColorModel) } }
     private val setupViewModel: PiSetupViewModel by viewModels { Factory { PiSetupViewModel(container.configStore, container.piClient) } }
     private var tts: TextToSpeech? = null
     private var ttsReady = false

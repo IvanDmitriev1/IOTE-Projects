@@ -8,6 +8,8 @@ import com.example.smarthomevoicecontrol.core.PiConfig
 import com.example.smarthomevoicecontrol.core.VoiceCommand
 import com.example.smarthomevoicecontrol.data.PiClient
 import com.example.smarthomevoicecontrol.data.PiConfigStore
+import com.example.smarthomevoicecontrol.data.TextToColorModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,7 +29,8 @@ data class VoiceControlUiState(
 
 class VoiceControlViewModel(
     private val configStore: PiConfigStore,
-    private val piClient: PiClient
+    private val piClient: PiClient,
+    private val textToColorModel: TextToColorModel? = null
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VoiceControlUiState())
     val uiState = _uiState.asStateFlow()
@@ -74,7 +77,17 @@ class VoiceControlViewModel(
         _uiState.update { it.copy(transcript = transcript, results = emptyList(), permissionDenied = false) }
         viewModelScope.launch {
             val config = configStore.current()
-            when (val parsed = CommandParser.parse(transcript)) {
+            val parsed = try {
+                textToColorModel?.parse(transcript) ?: CommandParser.parse(transcript)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) {
+                finish(listOf(CommandResult("Lights", error.message ?: "Couldn't load color descriptions.", false)))
+                return@launch
+            } catch (error: LinkageError) {
+                finish(listOf(CommandResult("Lights", error.message ?: "The local color runtime couldn't be loaded.", false)))
+                return@launch
+            }
+            when (parsed) {
                 is ParseResult.Invalid ->
                     finish(listOf(CommandResult("Command", parsed.reason, false)))
                 is ParseResult.Valid -> execute(parsed.commands, config)
@@ -112,6 +125,17 @@ class VoiceControlViewModel(
                             CommandResult("Lights", "Couldn't confirm the light command", false)
                         }
                     )
+                }
+                is VoiceCommand.SetLightDescription -> {
+                    try {
+                        val hex = checkNotNull(textToColorModel) { "Color model is unavailable." }.color(command.description)
+                        val result = piClient.setLights(config, hex)
+                        results += result.fold(
+                            { CommandResult("Lights", "Pi accepted: $hex", true) },
+                            { permissionWasRevoked = permissionWasRevoked || it is SecurityException; CommandResult("Lights", it.message ?: "Couldn't confirm the light command", false) }
+                        )
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (error: Exception) { results += CommandResult("Lights", error.message ?: "Couldn't resolve that color description.", false) }
                 }
             }
             _uiState.update { it.copy(results = results.toList()) }
